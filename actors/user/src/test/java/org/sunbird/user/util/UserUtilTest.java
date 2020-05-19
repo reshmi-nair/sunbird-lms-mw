@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,26 +18,23 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.sunbird.cassandraimpl.CassandraOperationImpl;
-import org.sunbird.common.ElasticSearchHelper;
-import org.sunbird.common.ElasticSearchRestHighImpl;
 import org.sunbird.common.exception.ProjectCommonException;
-import org.sunbird.common.factory.EsClientFactory;
-import org.sunbird.common.inf.ElasticSearchService;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.util.JsonKey;
-import org.sunbird.common.models.util.datasecurity.EncryptionService;
 import org.sunbird.helper.ServiceFactory;
 import org.sunbird.learner.util.DataCacheHandler;
 import org.sunbird.models.user.User;
+import org.sunbird.common.factory.EsClientFactory;
+import org.sunbird.common.ElasticSearchHelper;
+import org.sunbird.common.ElasticSearchRestHighImpl;
+import org.sunbird.common.inf.ElasticSearchService;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceFactory.class, CassandraOperationImpl.class, DataCacheHandler.class,
         EsClientFactory.class,
         ElasticSearchHelper.class,
-        ElasticSearchRestHighImpl.class,
-        EncryptionService.class,
-        org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class})
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+        ElasticSearchRestHighImpl.class})
+@PowerMockIgnore({"javax.management.*"})
 public class UserUtilTest {
   private static Response response;
   public static CassandraOperationImpl cassandraOperationImpl;
@@ -46,7 +42,6 @@ public class UserUtilTest {
 
   @Before
   public void beforeEachTest() {
-
     PowerMockito.mockStatic(DataCacheHandler.class);
     response = new Response();
     List<Map<String, Object>> userMapList = new ArrayList<Map<String, Object>>();
@@ -55,10 +50,7 @@ public class UserUtilTest {
     Response existResponse = new Response();
     existResponse.put(JsonKey.RESPONSE, userMapList);
     PowerMockito.mockStatic(ServiceFactory.class);
-    PowerMockito.mockStatic(ElasticSearchHelper.class);
-    PowerMockito.mockStatic(EsClientFactory.class);
     cassandraOperationImpl = mock(CassandraOperationImpl.class);
-    esService = mock(ElasticSearchRestHighImpl.class);
     Map<String, String> settingMap = new HashMap<String, String>();
     settingMap.put(JsonKey.PHONE_UNIQUE, "True");
     when(ServiceFactory.getInstance()).thenReturn(cassandraOperationImpl);
@@ -69,18 +61,12 @@ public class UserUtilTest {
             JsonKey.SUNBIRD, "user", JsonKey.PHONE, "9663890400"))
         .thenReturn(existResponse);
     when(DataCacheHandler.getConfigSettings()).thenReturn(settingMap);
-    when(EsClientFactory.getInstance(Mockito.anyString())).thenReturn(esService);
 
-    PowerMockito.mockStatic(org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class);
-    EncryptionService encryptionService = Mockito.mock(EncryptionService.class);
-    Mockito.when(org.sunbird.common.models.util.datasecurity.impl.ServiceFactory
-            .getEncryptionServiceInstance(null))
-            .thenReturn(encryptionService);
-    try {
-      Mockito.when(encryptionService.encryptData(Mockito.anyString())).thenReturn("abc123");
-    } catch (Exception e) { // TODO Auto-generated catch block
-      Assert.fail("Initialization failed");
-    }
+
+    PowerMockito.mockStatic(ElasticSearchHelper.class);
+    PowerMockito.mockStatic(EsClientFactory.class);
+    esService = mock(ElasticSearchRestHighImpl.class);
+    when(EsClientFactory.getInstance(Mockito.anyString())).thenReturn(esService);
   }
 
   @Test
